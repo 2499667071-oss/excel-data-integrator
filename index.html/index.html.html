@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Excel数据整合平台 - 手机电脑都能用</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --secondary: #7209b7;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --danger: #f94144;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+        
+        /* 基础重置 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+        
+        /* 容器 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        
+        /* 头部 */
+        .header {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .logo-icon {
+            font-size: 2.2rem;
+            color: var(--primary);
+        }
+        
+        .logo-text h1 {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+        
+        .logo-text p {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        /* 移动端优化 */
+        @media (max-width: 768px) {
+            .logo-text h1 {
+                font-size: 1.3rem;
+            }
+            
+            .container {
+                padding: 12px;
+            }
+        }
+        
+        /* 主内容 */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        /* 卡片 */
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--light-gray);
+        }
+        
+        .card-header h2 {
+            font-size: 1.4rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* 上传区域 */
+        .upload-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .upload-box {
+            border: 3px dashed var(--light-gray);
+            border-radius: var(--radius);
+            padding: 30px 20px;
+            text-align: center;
+            transition: var(--transition);
+            background: var(--light);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 250px;
+        }
+        
+        .upload-box:hover, .upload-box.dragover {
+            border-color: var(--primary);
+            background: rgba(67, 97, 238, 0.05);
+            transform: translateY(-3px);
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+        
+        .upload-box h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+        
+        .upload-box p {
+            color: var(--gray);
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
+        /* 按钮 */
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #3a86ff);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: var(--gray);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* 文件信息 */
+        .file-info {
+            margin-top: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--light-gray);
+            text-align: left;
+            width: 100%;
+        }
+        
+        .file-name {
+            font-weight: bold;
+            color: var(--dark);
+            margin-bottom: 6px;
+            word-break: break-all;
+        }
+        
+        .file-meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+        
+        /* 表格 */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid var(--light-gray);
+            background: white;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+        
+        th {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            left: 0;
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #e8f4fc;
+        }
+        
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            border-top: 4px solid var(--primary);
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--dark);
+            margin: 12px 0;
+        }
+        
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* 标签页 */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--light-gray);
+            margin-bottom: 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .tab {
+            padding: 14px 20px;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .tab.active {
+            color: var(--primary);
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* 消息提示 */
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* 加载动画 */
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 移动端特定优化 */
+        .mobile-only {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-only {
+                display: block;
+            }
+            
+            .desktop-only {
+                display: none;
+            }
+            
+            .upload-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .card {
+                padding: 16px;
+            }
+            
+            .btn {
+                padding: 16px 20px;
+                font-size: 1.1rem;
+            }
+            
+            th, td {
+                padding: 12px 8px;
+                font-size: 0.9rem;
+            }
+            
+            /* 移动端底部操作栏 */
+            .mobile-actions {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                padding: 12px 16px;
+                box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+                display: flex;
+                gap: 10px;
+                z-index: 1000;
+            }
+            
+            .mobile-actions .btn {
+                flex: 1;
+                margin: 0;
+                padding: 14px;
+            }
+            
+            .container {
+                padding-bottom: 80px; /* 为底部操作栏留出空间 */
+            }
+        }
+        
+        /* 苹果Safari优化 */
+        @supports (-webkit-touch-callout: none) {
+            .container {
+                padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            }
+            
+            .mobile-actions {
+                padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            }
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray);
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+        
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--light-gray);
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+        
+        /* 安装提示（PWA） */
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .install-prompt p {
+            margin-bottom: 12px;
+        }
+        
+        .install-prompt-buttons {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                <div class="logo-text">
+                    <h1>Excel数据整合</h1>
+                    <p>手机电脑都能用 · 无限制使用</p>
+                </div>
+            </div>
+            <div class="mobile-only" style="margin-top: 12px; font-size: 0.85rem; color: var(--primary);">
+                <i class="fas fa-mobile-alt"></i> 已优化移动端体验
+            </div>
+        </header>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <!-- 上传文件卡片 -->
+            <div class="card" id="upload-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-cloud-upload-alt"></i> 上传Excel文件</h2>
+                    <p style="color: var(--gray); font-size: 0.95rem; margin-top: 8px;">
+                        上传两个Excel文件，系统自动根据用户名匹配序号
+                    </p>
+                </div>
+                
+                <div class="upload-area">
+                    <div class="upload-box" id="upload-box-1" onclick="document.getElementById('file1').click()">
+                        <div class="upload-icon">
+                            <i class="fas fa-file-excel"></i>
+                        </div>
+                        <h3>文件1：用户列表</h3>
+                        <p>包含"序号"和"用户名"列的Excel文件</p>
+                        <div class="file-info" id="file1-info">
+                            <div class="file-name">点击选择或拖拽文件</div>
+                            <div class="file-meta">
+                                <span>支持: .xlsx, .xls, .csv</span>
+                                <span>大小: 无限制</span>
+                            </div>
+                        </div>
+                        <input type="file" id="file1" accept=".xlsx,.xls,.csv" style="display:none;">
+                    </div>
+                    
+                    <div class="upload-box" id="upload-box-2" onclick="document.getElementById('file2').click()">
+                        <div class="upload-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h3>文件2：订单数据</h3>
+                        <p>包含"用户名"列的Excel文件</p>
+                        <div class="file-info" id="file2-info">
+                            <div class="file-name">点击选择或拖拽文件</div>
+                            <div class="file-meta">
+                                <span>支持: .xlsx, .xls, .csv</span>
+                                <span>大小: 无限制</span>
+                            </div>
+                        </div>
+                        <input type="file" id="file2" accept=".xlsx,.xls,.csv" style="display:none;">
+                    </div>
+                </div>
+                
+                <div class="alert alert-info" id="upload-help" style="display: none;">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>提示：</strong> 系统会自动识别"用户名"列进行匹配。确保两个文件都有用户名列。
+                    </div>
+                </div>
+                
+                <div class="loader" id="upload-loader">
+                    <div class="spinner"></div>
+                    <p>正在读取文件...</p>
+                </div>
+                
+                <div id="upload-buttons" style="display: none;">
+                    <button class="btn btn-primary" onclick="previewData()">
+                        <i class="fas fa-eye"></i> 预览数据
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 数据预览卡片 -->
+            <div class="card" id="preview-card" style="display: none;">
+                <div class="card-header">
+                    <h2><i class="fas fa-table"></i> 数据预览</h2>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab active" data-tab="preview-tab-1">文件1预览</button>
+                    <button class="tab" data-tab="preview-tab-2">文件2预览</button>
+                </div>
+                
+                <div id="preview-tab-1" class="tab-content active">
+                    <div class="table-container">
+                        <table id="preview-table-1">
+                            <!-- 文件1预览数据 -->
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="preview-tab-2" class="tab-content">
+                    <div class="table-container">
+                        <table id="preview-table-2">
+                            <!-- 文件2预览数据 -->
+                        </table>
+                    </div>
+                </div>
+                
+                <button class="btn btn-success" onclick="processIntegration()" style="margin-top: 20px;">
+                    <i class="fas fa-cogs"></i> 开始数据整合
+                </button>
+            </div>
+            
+            <!-- 整合结果卡片 -->
+            <div class="card" id="result-card" style="display: none;">
+                <div class="card-header">
+                    <h2><i class="fas fa-check-circle"></i> 整合结果</h2>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">总记录</div>
+                        <div class="stat-value" id="stat-total">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">匹配成功</div>
+                        <div class="stat-value" id="stat-matched">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">匹配率</div>
+                        <div class="stat-value" id="stat-rate">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">处理时间</div>
+                        <div class="stat-value" id="stat-time">0s</div>
+                    </div>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab active" data-tab="result-tab">整合结果</button>
+                    <button class="tab" data-tab="unmatched-tab">未匹配数据</button>
+                </div>
+                
+                <div id="result-tab" class="tab-content active">
+                    <div class="table-container">
+                        <table id="result-table">
+                            <!-- 整合结果数据 -->
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="unmatched-tab" class="tab-content">
+                    <div class="table-container">
+                        <table id="unmatched-table">
+                            <!-- 未匹配数据 -->
+                        </table>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
+                    <button class="btn btn-success" onclick="downloadResult()" style="flex: 1;">
+                        <i class="fas fa-download"></i> 下载Excel
+                    </button>
+                    <button class="btn btn-primary" onclick="resetApp()" style="flex: 1;">
+                        <i class="fas fa-redo"></i> 重新开始
+                    </button>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 移动端底部操作栏 -->
+        <div class="mobile-actions" id="mobile-actions" style="display: none;">
+            <button class="btn btn-primary" onclick="processIntegration()" id="mobile-process-btn">
+                <i class="fas fa-cogs"></i> 开始整合
+            </button>
+            <button class="btn btn-success" onclick="downloadResult()" id="mobile-download-btn" disabled>
+                <i class="fas fa-download"></i> 下载
+            </button>
+        </div>
+        
+        <!-- PWA安装提示 -->
+        <div class="install-prompt" id="install-prompt">
+            <p><strong>添加到主屏幕</strong> 以便离线使用此工具</p>
+            <div class="install-prompt-buttons">
+                <button class="btn btn-secondary" onclick="hideInstallPrompt()" style="flex: 1;">
+                    稍后再说
+                </button>
+                <button class="btn btn-primary" onclick="installApp()" style="flex: 1;">
+                    立即安装
+                </button>
+            </div>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer class="footer">
+            <p>Excel数据整合平台 &copy; 2023 | 完全免费 · 无限制使用</p>
+            <p style="margin-top: 8px; font-size: 0.8rem;">
+                支持 iOS Safari, Android Chrome, 微信浏览器, 电脑浏览器
+            </p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 全局变量
+        let file1Data = null;
+        let file2Data = null;
+        let integrationResult = null;
+        let startTime = null;
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+        });
+        
+        // 初始化应用
+        function initApp() {
+            // 初始化文件上传
+            initFileUpload();
+            
+            // 初始化标签页
+            initTabs();
+            
+            // 初始化拖拽上传
+            initDragAndDrop();
+            
+            // 检查PWA安装
+            checkPWAInstall();
+            
+            // 显示欢迎信息
+            setTimeout(() => {
+                showAlert('欢迎使用Excel数据整合工具！支持手机和电脑。', 'info', 5000);
+            }, 1000);
+        }
+        
+        // 初始化文件上传
+        function initFileUpload() {
+            // 文件1上传
+            document.getElementById('file1').addEventListener('change', function(e) {
+                handleFileUpload(e, 'file1');
+            });
+            
+            // 文件2上传
+            document.getElementById('file2').addEventListener('change', function(e) {
+                handleFileUpload(e, 'file2');
+            });
+        }
+        
+        // 初始化拖拽上传
+        function initDragAndDrop() {
+            const uploadBoxes = document.querySelectorAll('.upload-box');
+            
+            uploadBoxes.forEach((box, index) => {
+                const fileId = index === 0 ? 'file1' : 'file2';
+                
+                box.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('dragover');
+                });
+                
+                box.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                });
+                
+                box.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                    
+                    if (e.dataTransfer.files.length) {
+                        const file = e.dataTransfer.files[0];
+                        const input = document.getElementById(fileId);
+                        
+                        // 创建DataTransfer对象来设置文件
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        input.files = dataTransfer.files;
+                        
+                        // 触发change事件
+                        const event = new Event('change', { bubbles: true });
+                        input.dispatchEvent(event);
+                    }
+                });
+            });
+        }
+        
+        // 处理文件上传
+        async function handleFileUpload(event, fileType) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // 检查文件类型
+            const validExtensions = ['.xlsx', '.xls', '.csv'];
+            const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+            
+            if (!validExtensions.includes(fileExt)) {
+                showAlert('请上传Excel文件(.xlsx, .xls)或CSV文件', 'error');
+                return;
+            }
+            
+            // 显示加载动画
+            showLoader(true);
+            
+            try {
+                // 读取文件
+                const data = await readExcelFile(file);
+                
+                if (fileType === 'file1') {
+                    file1Data = data;
+                    updateFileInfo('file1-info', file, data.rows.length);
+                } else {
+                    file2Data = data;
+                    updateFileInfo('file2-info', file, data.rows.length);
+                }
+                
+                // 显示帮助信息
+                document.getElementById('upload-help').style.display = 'flex';
+                
+                // 显示预览按钮
+                if (file1Data && file2Data) {
+                    document.getElementById('upload-buttons').style.display = 'block';
+                    showAlert('两个文件都已上传，可以开始预览数据', 'success');
+                    
+                    // 在移动端显示底部操作栏
+                    if (window.innerWidth <= 768) {
+                        document.getElementById('mobile-actions').style.display = 'flex';
+                        document.getElementById('mobile-process-btn').disabled = false;
+                    }
+                }
+            } catch (error) {
+                showAlert('读取文件失败：' + error.message, 'error');
+                console.error('读取文件失败:', error);
+            } finally {
+                showLoader(false);
+            }
+        }
+        
+        // 读取Excel文件
+        function readExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const data = e.target.result;
+                        const workbook = XLSX.read(data, { type: 'binary' });
+                        
+                        // 获取第一个工作表
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        
+                        // 转换为JSON数组
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        
+                        // 处理数据
+                        const headers = jsonData[0] || [];
+                        const rows = jsonData.slice(1).filter(row => {
+                            return row.some(cell => cell != null && cell !== '');
+                        });
+                        
+                        resolve({
+                            headers,
+                            rows,
+                            fileName: file.name,
+                            fileSize: file.size,
+                            sheetName
+                        });
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                reader.onerror = function() {
+                    reject(new Error('读取文件失败'));
+                };
+                
+                reader.readAsBinaryString(file);
+            });
+        }
+        
+        // 更新文件信息显示
+        function updateFileInfo(elementId, file, rowCount = 0) {
+            const element = document.getElementById(elementId);
+            const fileSize = (file.size / 1024).toFixed(1);
+            
+            element.innerHTML = `
+                <div class="file-name">${file.name}</div>
+                <div class="file-meta">
+                    <span>${fileSize} KB</span>
+                    <span>${rowCount} 行数据</span>
+                </div>
+            `;
+        }
+        
+        // 预览数据
+        function previewData() {
+            if (!file1Data || !file2Data) {
+                showAlert('请先上传两个文件', 'error');
+                return;
+            }
+            
+            // 显示预览卡片
+            document.getElementById('preview-card').style.display = 'block';
+            
+            // 渲染预览表格
+            renderPreviewTable('preview-table-1', file1Data);
+            renderPreviewTable('preview-table-2', file2Data);
+            
+            // 滚动到预览区域
+            document.getElementById('preview-card').scrollIntoView({ behavior: 'smooth' });
+            
+            showAlert('数据预览已生成，请检查数据是否正确', 'info');
+        }
+        
+        // 渲染预览表格
+        function renderPreviewTable(tableId, fileData) {
+            const table = document.getElementById(tableId);
+            table.innerHTML = '';
+            
+            const headers = fileData.headers;
+            const rows = fileData.rows.slice(0, 10); // 只显示前10行
+            
+            // 创建表头
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header || `列${headers.indexOf(header) + 1}`;
+                headerRow.appendChild(th);
+            });
+            
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // 创建表格主体
+            const tbody = document.createElement('tbody');
+            
+            if (rows.length === 0) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = headers.length;
+                cell.textContent = '没有数据';
+                cell.style.textAlign = 'center';
+                cell.style.padding = '40px';
+                row.appendChild(cell);
+                tbody.appendChild(row);
+            } else {
+                rows.forEach(rowData => {
+                    const row = document.createElement('tr');
+                    
+                    headers.forEach((header, index) => {
+                        const cell = document.createElement('td');
+                        cell.textContent = rowData[index] !== undefined ? rowData[index] : '';
+                        row.appendChild(cell);
+                    });
+                    
+                    tbody.appendChild(row);
+                });
+            }
+            
+            table.appendChild(tbody);
+        }
+        
+        // 处理数据整合
+        function processIntegration() {
+            if (!file1Data || !file2Data) {
+                showAlert('请先上传两个文件', 'error');
+                return;
+            }
+            
+            startTime = Date.now();
+            showLoader(true);
+            
+            try {
+                // 查找用户名和序号列
+                const file1UsernameIndex = findColumnIndex(file1Data.headers, ['用户名', '用户', '名称', 'name', 'username']);
+                const file1IdIndex = findColumnIndex(file1Data.headers, ['序号', '编号', 'ID', 'id', '编号']);
+                
+                const file2UsernameIndex = findColumnIndex(file2Data.headers, ['用户名', '用户', '名称', 'name', 'username']);
+                
+                if (file1UsernameIndex === -1) {
+                    throw new Error('文件1中未找到用户名列');
+                }
+                
+                if (file2UsernameIndex === -1) {
+                    throw new Error('文件2中未找到用户名列');
+                }
+                
+                // 创建用户名到序号的映射
+                const usernameToId = {};
+                file1Data.rows.forEach(row => {
+                    const username = String(row[file1UsernameIndex] || '').trim();
+                    const id = file1IdIndex !== -1 ? (row[file1IdIndex] || '') : '';
+                    
+                    if (username && !usernameToId[username]) {
+                        usernameToId[username] = id;
+                    }
+                });
+                
+                // 处理数据整合
+                const mergedData = [];
+                const unmatchedData = [];
+                let matchedCount = 0;
+                let totalCount = 0;
+                
+                file2Data.rows.forEach(row => {
+                    const username = String(row[file2UsernameIndex] || '').trim();
+                    const id = usernameToId[username] || '未匹配';
+                    
+                    // 创建整合后的行
+                    const mergedRow = {
+                        '序号': id,
+                        '用户名': username
+                    };
+                    
+                    // 添加文件2的其他数据
+                    file2Data.headers.forEach((header, index) => {
+                        if (index !== file2UsernameIndex) {
+                            mergedRow[header] = row[index] || '';
+                        }
+                    });
+                    
+                    mergedData.push(mergedRow);
+                    totalCount++;
+                    
+                    if (id !== '未匹配') {
+                        matchedCount++;
+                    } else {
+                        unmatchedData.push({
+                            '用户名': username,
+                            '原因': '在文件1中未找到匹配的用户名'
+                        });
+                    }
+                });
+                
+                // 存储整合结果
+                integrationResult = {
+                    mergedData,
+                    unmatchedData,
+                    stats: {
+                        total: totalCount,
+                        matched: matchedCount,
+                        unmatched: totalCount - matchedCount,
+                        rate: totalCount > 0 ? ((matchedCount / totalCount) * 100).toFixed(1) : 0,
+                        time: ((Date.now() - startTime) / 1000).toFixed(2)
+                    }
+                };
+                
+                // 显示结果
+                showResults();
+                
+                // 启用下载按钮
+                document.getElementById('mobile-download-btn').disabled = false;
+                
+                showAlert(`数据整合完成！成功匹配 ${matchedCount}/${totalCount} 条记录`, 'success');
+            } catch (error) {
+                showAlert('整合数据时出错：' + error.message, 'error');
+                console.error('整合数据时出错:', error);
+            } finally {
+                showLoader(false);
+            }
+        }
+        
+        // 显示结果
+        function showResults() {
+            // 显示结果卡片
+            document.getElementById('result-card').style.display = 'block';
+            
+            // 更新统计数据
+            document.getElementById('stat-total').textContent = integrationResult.stats.total;
+            document.getElementById('stat-matched').textContent = integrationResult.stats.matched;
+            document.getElementById('stat-rate').textContent = integrationResult.stats.rate + '%';
+            document.getElementById('stat-time').textContent = integrationResult.stats.time + 's';
+            
+            // 渲染结果表格
+            renderResultTable();
+            
+            // 渲染未匹配表格
+            renderUnmatchedTable();
+            
+            // 滚动到结果区域
+            document.getElementById('result-card').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // 渲染结果表格
+        function renderResultTable() {
+            const table = document.getElementById('result-table');
+            table.innerHTML = '';
+            
+            if (!integrationResult.mergedData.length) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 3;
+                cell.textContent = '没有数据';
+                cell.style.textAlign = 'center';
+                cell.style.padding = '40px';
+                row.appendChild(cell);
+                table.appendChild(row);
+                return;
+            }
+            
+            // 获取列名
+            const firstRow = integrationResult.mergedData[0];
+            const columns = Object.keys(firstRow);
+            
+            // 创建表头
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            
+            columns.forEach(column => {
+                const th = document.createElement('th');
+                th.textContent = column;
+                headerRow.appendChild(th);
+            });
+            
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // 创建表格主体
+            const tbody = document.createElement('tbody');
+            
+            integrationResult.mergedData.slice(0, 50).forEach(rowData => { // 只显示前50行
+                const row = document.createElement('tr');
+                
+                // 高亮未匹配的行
+                if (rowData['序号'] === '未匹配') {
+                    row.style.backgroundColor = '#fff5f5';
+                }
+                
+                columns.forEach(column => {
+                    const cell = document.createElement('td');
+                    cell.textContent = rowData[column] !== undefined ? rowData[column] : '';
+                    row.appendChild(cell);
+                });
+                
+                tbody.appendChild(row);
+            });
+            
+            table.appendChild(tbody);
+            
+            // 如果数据超过50行，显示提示
+            if (integrationResult.mergedData.length > 50) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = columns.length;
+                cell.textContent = `... 还有 ${integrationResult.mergedData.length - 50} 条记录，请在下载的文件中查看完整数据`;
+                cell.style.textAlign = 'center';
+                cell.style.fontStyle = 'italic';
+                cell.style.color = 'var(--gray)';
+                cell.style.padding = '16px';
+                row.appendChild(cell);
+                tbody.appendChild(row);
+            }
+        }
+        
+        // 渲染未匹配表格
+        function renderUnmatchedTable() {
+            const table = document.getElementById('unmatched-table');
+            table.innerHTML = '';
+            
+            if (!integrationResult.unmatchedData.length) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 2;
+                cell.textContent = '🎉 所有用户都匹配成功！';
+                cell.style.textAlign = 'center';
+                cell.style.padding = '40px';
+                cell.style.color = 'var(--success)';
+                row.appendChild(cell);
+                table.appendChild(row);
+                return;
+            }
+            
+            // 创建表头
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            
+            ['用户名', '原因'].forEach(column => {
+                const th = document.createElement('th');
+                th.textContent = column;
+                headerRow.appendChild(th);
+            });
+            
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // 创建表格主体
+            const tbody = document.createElement('tbody');
+            
+            integrationResult.unmatchedData.forEach(rowData => {
+                const row = document.createElement('tr');
+                
+                ['用户名', '原因'].forEach(column => {
+                    const cell = document.createElement('td');
+                    cell.textContent = rowData[column] || '';
+                    row.appendChild(cell);
+                });
+                
+                tbody.appendChild(row);
+            });
+            
+            table.appendChild(tbody);
+        }
+        
+        // 下载结果
+        function downloadResult() {
+            if (!integrationResult || !integrationResult.mergedData.length) {
+                showAlert('没有可下载的数据', 'error');
+                return;
+            }
+            
+            try {
+                // 创建工作表
+                const ws = XLSX.utils.json_to_sheet(integrationResult.mergedData);
+                
+                // 创建工作簿
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "整合结果");
+                
+                // 如果有没有匹配的数据，添加到第二个工作表
+                if (integrationResult.unmatchedData.length > 0) {
+                    const ws2 = XLSX.utils.json_to_sheet(integrationResult.unmatchedData);
+                    XLSX.utils.book_append_sheet(wb, ws2, "未匹配数据");
+                }
+                
+                // 生成文件名
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+                const fileName = `数据整合结果_${timestamp}.xlsx`;
+                
+                // 下载文件
+                XLSX.writeFile(wb, fileName);
+                
+                showAlert('文件下载开始，请查看浏览器下载列表', 'success', 3000);
+            } catch (error) {
+                showAlert('下载失败：' + error.message, 'error');
+                console.error('下载失败:', error);
+            }
+        }
+        
+        // 重置应用
+        function resetApp() {
+            if (confirm('确定要重新开始吗？当前数据将会丢失。')) {
+                // 重置数据
+                file1Data = null;
+                file2Data = null;
+                integrationResult = null;
+                
+                // 重置文件输入
+                document.getElementById('file1').value = '';
+                document.getElementById('file2').value = '';
+                
+                // 重置文件信息显示
+                document.getElementById('file1-info').innerHTML = `
+                    <div class="file-name">点击选择或拖拽文件</div>
+                    <div class="file-meta">
+                        <span>支持: .xlsx, .xls, .csv</span>
+                        <span>大小: 无限制</span>
+                    </div>
+                `;
+                
+                document.getElementById('file2-info').innerHTML = `
+                    <div class="file-name">点击选择或拖拽文件</div>
+                    <div class="file-meta">
+                        <span>支持: .xlsx, .xls, .csv</span>
+                        <span>大小: 无限制</span>
+                    </div>
+                `;
+                
+                // 隐藏卡片
+                document.getElementById('upload-help').style.display = 'none';
+                document.getElementById('upload-buttons').style.display = 'none';
+                document.getElementById('preview-card').style.display = 'none';
+                document.getElementById('result-card').style.display = 'none';
+                document.getElementById('mobile-actions').style.display = 'none';
+                
+                // 滚动到顶部
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                showAlert('已重置，可以重新上传文件', 'info');
+            }
+        }
+        
+        // 查找列索引
+        function findColumnIndex(headers, possibleNames) {
+            for (let name of possibleNames) {
+                const index = headers.findIndex(header => 
+                    header && String(header).toLowerCase().includes(name.toLowerCase())
+                );
+                if (index !== -1) return index;
+            }
+            return -1;
+        }
+        
+        // 初始化标签页
+        function initTabs() {
+            document.querySelectorAll('.tabs').forEach(tabContainer => {
+                const tabs = tabContainer.querySelectorAll('.tab');
+                const tabContents = tabContainer.parentElement.querySelectorAll('.tab-content');
+                
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        const tabId = this.getAttribute('data-tab');
+                        
+                        // 移除所有active类
+                        tabs.forEach(t => t.classList.remove('active'));
+                        tabContents.forEach(c => c.classList.remove('active'));
+                        
+                        // 添加active类
+                        this.classList.add('active');
+                        document.getElementById(tabId).classList.add('active');
+                    });
+                });
+            });
+        }
+        
+        // 显示/隐藏加载动画
+        function showLoader(show) {
+            document.getElementById('upload-loader').style.display = show ? 'block' : 'none';
+        }
+        
+        // 显示消息提示
+        function showAlert(message, type, duration = 3000) {
+            // 创建提示元素
+            const alertEl = document.createElement('div');
+            alertEl.className = `alert alert-${type}`;
+            alertEl.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                 type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <div>${message}</div>
+            `;
+            
+            // 添加到页面顶部
+            const container = document.querySelector('.container');
+            container.insertBefore(alertEl, container.firstChild);
+            
+            // 自动移除
+            if (duration > 0) {
+                setTimeout(() => {
+                    alertEl.style.opacity = '0';
+                    alertEl.style.transform = 'translateY(-10px)';
+                    setTimeout(() => alertEl.remove(), 300);
+                }, duration);
+            }
+        }
+        
+        // PWA相关功能
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // 阻止浏览器默认的安装提示
+            e.preventDefault();
+            // 保存事件以便后续触发
+            deferredPrompt = e;
+            // 显示自定义安装提示
+            setTimeout(() => {
+                document.getElementById('install-prompt').style.display = 'block';
+            }, 5000);
+        });
+        
+        function checkPWAInstall() {
+            // 检查是否已安装
+            if (window.matchMedia('(display-mode: standalone)').matches || 
+                window.navigator.standalone === true) {
+                console.log('已安装为PWA');
+            }
+        }
+        
+        function installApp() {
+            if (deferredPrompt) {
+                // 显示安装提示
+                deferredPrompt.prompt();
+                // 等待用户响应
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('用户接受了安装');
+                    } else {
+                        console.log('用户拒绝了安装');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+            hideInstallPrompt();
+        }
+        
+        function hideInstallPrompt() {
+            document.getElementById('install-prompt').style.display = 'none';
+        }
+        
+        // 添加到主屏幕提示
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(err => {
+                    console.log('ServiceWorker注册失败:', err);
+                });
+            });
+        }
+        
+        // 导出函数供全局使用
+        window.previewData = previewData;
+        window.processIntegration = processIntegration;
+        window.downloadResult = downloadResult;
+        window.resetApp = resetApp;
+        window.installApp = installApp;
+        window.hideInstallPrompt = hideInstallPrompt;
+    </script>
+</body>
+</html>
